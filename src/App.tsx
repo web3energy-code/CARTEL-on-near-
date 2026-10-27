@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { initializeNearWallet } from './nearWallet';
 import { getPublishedProducts } from './lib/products';
 import type { Product } from './types';
-import SellerForm from "./components/SellerForm";
-import { useCallback } from "react";
+import SellerForm from './components/SellerForm';
 import {
   ArrowDownRight,
   ArrowRight,
@@ -40,38 +39,24 @@ export default function App() {
 const [productsLoading, setProductsLoading] = useState(true);
 const [productsError, setProductsError] = useState(false);
 
-useEffect(() => {
-  let cancelled = false;
+const loadProducts = useCallback(async () => {
+  setProductsLoading(true);
+  setProductsError(false);
 
-  async function loadProducts() {
-    setProductsLoading(true);
-    setProductsError(false);
-
-    try {
-      const results = await getPublishedProducts();
-
-      if (!cancelled) {
-        setProducts(results);
-      }
-    } catch (error) {
-      console.error('Failed to load CARTEL products:', error);
-
-      if (!cancelled) {
-        setProductsError(true);
-      }
-    } finally {
-      if (!cancelled) {
-        setProductsLoading(false);
-      }
-    }
+  try {
+    const results = await getPublishedProducts();
+    setProducts(results);
+  } catch (error) {
+    console.error('Failed to load CARTEL products:', error);
+    setProductsError(true);
+  } finally {
+    setProductsLoading(false);
   }
-
-  loadProducts();
-
-  return () => {
-    cancelled = true;
-  };
 }, []);
+
+useEffect(() => {
+  void loadProducts();
+}, [loadProducts]);
 
   useEffect(() => {
     let subscription: { remove: () => void } | undefined;

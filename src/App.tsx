@@ -266,9 +266,9 @@ useEffect(() => {
           </div>
 
           <div className="listing-count">
-            <span className="count-dot" />
-            <span>Live listings</span>
-            <strong>0</strong>
+           <span className="count-dot" />
+           <span>Live listings</span>
+           <strong>{products.length}</strong>
           </div>
         </div>
 
@@ -307,25 +307,129 @@ useEffect(() => {
           </label>
         </div>
 
-        <div className="empty-state">
-          <div className="empty-icon">
-            <ShoppingBag size={28} strokeWidth={1.4} />
+        {productsLoading ? (
+  <div className="empty-state">
+    <div className="empty-kicker">LOADING CARTEL</div>
+    <h3>Finding available products...</h3>
+    <p>Checking the marketplace for published listings.</p>
+  </div>
+) : productsError ? (
+  <div className="empty-state">
+    <div className="empty-kicker">MARKETPLACE CONNECTION</div>
+    <h3>We couldn't load the listings.</h3>
+    <p>
+      Please try again later. The marketplace could not retrieve
+      its product data.
+    </p>
+    <button
+      className="primary-button empty-button"
+      onClick={() => window.location.reload()}
+    >
+      Try again <ArrowRight size={17} />
+    </button>
+  </div>
+) : products.length === 0 ? (
+  <div className="empty-state">
+    <div className="empty-icon">
+      <ShoppingBag size={28} strokeWidth={1.4} />
+    </div>
+    <div className="empty-kicker">A FRESH MARKET STARTS HERE</div>
+    <h3>No products listed yet.</h3>
+    <p>
+      CARTEL is ready for its first sellers.
+      Published listings will appear here when available.
+    </p>
+    <a className="primary-button empty-button" href="#sell">
+      Become a founding seller <ArrowRight size={17} />
+    </a>
+    <span className="empty-note">
+      {search
+        ? `Your search for "${search}" will work when listings are available.`
+        : `Category: ${activeCategory}`}
+    </span>
+  </div>
+) : (
+  <div className="product-grid">
+    {products
+      .filter((product) => {
+        const matchesCategory =
+          activeCategory === 'All products' ||
+          product.category === activeCategory;
+
+        const query = search.trim().toLowerCase();
+
+        const matchesSearch =
+          !query ||
+          product.title.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query);
+
+        return matchesCategory && matchesSearch;
+      })
+      .map((product) => (
+        <article className="product-card" key={product.id}>
+          {product.imageUrl ? (
+            <img
+              className="product-image"
+              src={product.imageUrl}
+              alt={product.title}
+              loading="lazy"
+            />
+          ) : (
+            <div className="product-image-placeholder">
+              <Package size={32} />
+            </div>
+          )}
+
+          <div className="product-card-content">
+            <span className="section-kicker">
+              {product.category}
+            </span>
+
+            <h3>{product.title}</h3>
+
+            <p>{product.description}</p>
+
+            <div className="product-card-bottom">
+              <strong>
+                {Number(product.priceNear).toLocaleString('en-US', {
+                  maximumFractionDigits: 4,
+                })}{' '}
+                NEAR
+              </strong>
+
+              <span>
+                {product.quantity} available
+              </span>
+            </div>
+
+            <span className="product-seller">
+              Seller: {product.sellerAccountId}
+            </span>
           </div>
-          <div className="empty-kicker">A FRESH MARKET STARTS HERE</div>
-          <h3>No products listed yet.</h3>
-          <p>
-            CARTEL is getting ready for its first sellers.
-            Published listings will appear here when the marketplace is connected.
-          </p>
-          <a className="primary-button empty-button" href="#sell">
-            Become a founding seller <ArrowRight size={17} />
-          </a>
-          <span className="empty-note">
-            {search
-              ? `Your search for "${search}" will work when listings are available.`
-              : `Category: ${activeCategory}`}
-          </span>
-        </div>
+        </article>
+      ))}
+
+    {products.filter((product) => {
+      const matchesCategory =
+        activeCategory === 'All products' ||
+        product.category === activeCategory;
+
+      const query = search.trim().toLowerCase();
+
+      const matchesSearch =
+        !query ||
+        product.title.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query);
+
+      return matchesCategory && matchesSearch;
+    }).length === 0 && (
+      <div className="empty-state">
+        <h3>No matching products.</h3>
+        <p>Try another search or select a different category.</p>
+      </div>
+    )}
+  </div>
+)}
       </section>
 
       <section className="sell-banner" id="sell">

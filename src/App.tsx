@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { initializeNearWallet } from './nearWallet';
 import {
   ArrowDownRight,
   ArrowRight,
@@ -29,6 +30,50 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState('All products');
   const [search, setSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountId, setAccountId] = useState('');
+  const [walletLoading, setWalletLoading] = useState(false);
+
+  useEffect(() => {
+    let subscription: { remove: () => void } | undefined;
+
+    initializeNearWallet()
+      .then(({ selector }) => {
+        const updateAccount = () => {
+          const accounts = selector.store.getState().accounts;
+          setAccountId(accounts[0]?.accountId ?? '');
+        };
+
+        updateAccount();
+
+        subscription = selector.store.observable.subscribe(updateAccount);
+      })
+      .catch((error) => {
+        console.error('NEAR wallet initialization failed:', error);
+      });
+
+    return () => subscription?.remove();
+  }, []);
+
+  async function handleWalletClick() {
+    setWalletLoading(true);
+
+    try {
+      const { selector, modal } = await initializeNearWallet();
+
+      if (accountId) {
+        const wallet = await selector.wallet();
+        await wallet.signOut();
+        setAccountId('');
+      } else {
+        modal.show();
+      }
+    } catch (error) {
+      console.error('NEAR wallet action failed:', error);
+      alert('Wallet connection failed. Please try again.');
+    } finally {
+      setWalletLoading(false);
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -51,14 +96,20 @@ export default function App() {
           <a className="nav-link" href="#sell">Sell on CARTEL</a>
         </nav>
 
-        <div className="nav-actions">
-          <button
-            className="wallet-button"
-            onClick={() => alert('NEAR wallet connection is coming in the next build step.')}
-          >
-            <Wallet size={17} />
-            <span>Connect wallet</span>
-          </button>
+        <button
+          className="wallet-button"
+          onClick={handleWalletClick}
+          disabled={walletLoading}
+        >
+          <Wallet size={17} />
+          <span>
+            {walletLoading
+              ? 'Please wait...'
+              : accountId
+                ? `${accountId.slice(0, 8)}…`
+                : 'Connect wallet'}
+          </span>
+         </button>
 
           <button
             className="menu-button"

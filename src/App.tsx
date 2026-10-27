@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { initializeNearWallet } from './nearWallet';
+import { getPublishedProducts } from './lib/products';
+import type { Product } from './types';
 import {
   ArrowDownRight,
   ArrowRight,

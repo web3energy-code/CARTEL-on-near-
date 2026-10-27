@@ -34,6 +34,42 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountId, setAccountId] = useState('');
   const [walletLoading, setWalletLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+const [productsLoading, setProductsLoading] = useState(true);
+const [productsError, setProductsError] = useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+
+  async function loadProducts() {
+    setProductsLoading(true);
+    setProductsError(false);
+
+    try {
+      const results = await getPublishedProducts();
+
+      if (!cancelled) {
+        setProducts(results);
+      }
+    } catch (error) {
+      console.error('Failed to load CARTEL products:', error);
+
+      if (!cancelled) {
+        setProductsError(true);
+      }
+    } finally {
+      if (!cancelled) {
+        setProductsLoading(false);
+      }
+    }
+  }
+
+  loadProducts();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   useEffect(() => {
     let subscription: { remove: () => void } | undefined;

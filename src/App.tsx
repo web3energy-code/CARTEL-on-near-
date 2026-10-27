@@ -118,7 +118,6 @@ export default function App() {
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-        </div>
       </header>
 
       {menuOpen && (
